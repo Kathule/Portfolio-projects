@@ -1,5 +1,7 @@
+--Choose data to use
 SELECT * from NashvilleHousing
-
+	
+-- Standardize Date Format
 Select  NashvilleHousing.SaleDate, CONVERT(date,NashvilleHousing.SaleDate)
 from NashvilleHousing
 ALTER TABLE NashvilleHousing ALTER COLUMN SaleDate DATE
@@ -9,7 +11,7 @@ set SaleDate= CONVERT(date,NashvilleHousing.SaleDate)
 Select *
 from NashvilleHousing
 
-
+-- Populate Property Address data
 Select a.ParcelID,a.PropertyAddress,b.ParcelID,b.PropertyAddress,ISNULL(a.propertyaddress,b.PropertyAddress)
 from NashvilleHousing a
 Join NashvilleHousing b
@@ -23,13 +25,15 @@ Join NashvilleHousing b
 on a.ParcelID=b.ParcelID
 and a.[UniqueID ]<>b.[UniqueID ]
 where a.PropertyAddress is null
-
+	
+--Using substring to separate Address into 3 columns (Address, City, State)
 Select SUBSTRING( NashvilleHousing.PropertyAddress,1,CHARINDEX(',',PropertyAddress)-1) as Address,
 SUBSTRING(NashvilleHousing.PropertyAddress,CHARINDEX(',',PropertyAddress)+1,LEN(NashvilleHousing.PropertyAddress)) as address
 from NashvilleHousing
 
 Alter table NashvilleHousing
 Add Propertysplitaddress nvarchar (255)
+	
 
 Update NashvilleHousing
 Set Propertysplitaddress= SUBSTRING( NashvilleHousing.PropertyAddress,1,CHARINDEX(',',PropertyAddress)-1)
@@ -46,6 +50,7 @@ from NashvilleHousing
 
 Select NashvilleHousing.OwnerAddress
 from NashvilleHousing
+	
 
 Select PARSENAME(Replace (OwnerAddress, ',','.'), 3),
 PARSENAME(Replace (OwnerAddress, ',','.'), 2),
@@ -77,7 +82,7 @@ Select NashvilleHousing.SoldAsVacant,COUNT( NashvilleHousing.SoldAsVacant)
 from NashvilleHousing
 group by NashvilleHousing.SoldAsVacant
 order by 2
-
+--Change 'Y' and 'N' to 'Yes' and 'No' in SoldAsVacant column
 Select NashvilleHousing.SoldAsVacant
 ,case when NashvilleHousing.SoldAsVacant='Y' then 'Yes'
       when NashvilleHousing.SoldAsVacant='N' then 'No'
@@ -90,7 +95,8 @@ set NashvilleHousing.SoldAsVacant=case when NashvilleHousing.SoldAsVacant='Y' th
       when NashvilleHousing.SoldAsVacant='N' then 'No'
 	  Else SoldAsVacant
 End
-
+	
+-- Remove Duplicates
 with RowNumCTE AS
 (Select *,Row_number()OVER (Partition by ParcelID, PropertyAddress,Saleprice,Saledate,LegalReference
 ORDER BY UniqueID) row_num
@@ -107,7 +113,8 @@ From NashvilleHousing)
 Delete 
 from RowNumCTE
 where row_num>1
-
+	
+--Delete unused columns
 Alter table NashvilleHousing
 drop column owneraddress,taxdistrict,propertyaddress
 
